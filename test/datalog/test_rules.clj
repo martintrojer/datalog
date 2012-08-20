@@ -13,19 +13,17 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 12 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
-(ns clojure.contrib.datalog.tests.test-rules
-  (:use clojure.test
-        clojure.contrib.datalog.rules
-        clojure.contrib.datalog.literals
-        clojure.contrib.datalog.database))
-
+(ns datalog.test-rules
+  (:use [datalog.rules]
+        [datalog.literals]
+        [datalog.database])
+  (:use [clojure.test]))
 
 (def tr-1 (<- (:fred :x ?x :y ?y) (:mary :x ?x :z ?z) (:sally :z ?z :y ?y)))
 (def tr-2 (<- (:fred) (not! :mary :x 3)))
 (def tr-3 (<- (:fred :x ?x :y ?y) (if > ?x ?y) (:mary :x ?x) (:sally :y ?y)))
-
-
 
 (deftest test-rule-safety
   (is (thrown-with-msg? Exception #".*Head vars.*not bound.*"
@@ -34,7 +32,6 @@
          (<- (:fred :x ?x) (:becky :x ?x) (not! :sally :y ?y))))
   (is (thrown-with-msg? Exception #".*Body vars.*not bound.*negative position.*"
          (<- (:fred :x ?x) (:becky :x ?x) (if > ?x ?y)))))
-
 
 (deftest test-sip
   (is (= (compute-sip #{:x} #{:mary :sally} tr-1)
@@ -58,7 +55,6 @@
                                (if > ?x ?y))))))
                    ; Display rule is used because = does not work on
                    ; (if > ?x ?y) because it contains a closure
-
 
 (def rs
      (rules-set
@@ -96,7 +92,6 @@
              [:sally :x 4]
              [:ben :y :bob]))
 
-
 (deftest test-apply-rule
   (is (= (apply-rule db2 empty-database (<- (:becky :y ?y) (:sally :x ?x)
                                                            (:fred :x ?x :y ?y)
@@ -118,13 +113,3 @@
             {
              })
            }))))
-
-
-
-
-(comment
-  (run-tests)
-)
-
-;; End of file
-
