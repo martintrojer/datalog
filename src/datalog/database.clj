@@ -13,24 +13,21 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 21 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.database
-  (:use clojure.contrib.datalog.util)
-  (:use clojure.contrib.def)
-  (:use [clojure.set :only (union intersection difference)])
-  (:use [clojure.contrib.except :only (throwf)]))
+  (:use datalog.util)
+  (:use [clojure.set :only (union intersection difference)]))
 
-
-(defstruct relation
-  :schema           ; A set of key names
-  :data             ; A set of tuples
-  :indexes)         ; A map key names to indexes (in turn a map of value to tuples)
-
+;; A set of key names
+;; A set of tuples
+;; A map key names to indexes (in turn a map of value to tuples)
+(defrecord Relation [schema data indexes])         
 
 ;;; DDL
 
 (defmethod print-method ::datalog-database
-  [db #^Writer writer]
+  [db writer]
   (binding [*out* writer]
     (do
       (println "(datalog-database")
@@ -48,7 +45,7 @@
 (def empty-database (datalog-database {}))
 
 (defmethod print-method ::datalog-relation
-  [rel #^Writer writer]
+  [rel writer]
   (binding [*out* writer]
     (do
       (println "(datalog-relation")
@@ -75,7 +72,7 @@
 (defn datalog-relation
   "Creates a relation"
   [schema data indexes]
-  (with-meta (struct relation schema data indexes) {:type ::datalog-relation}))
+  (with-meta (->Relation schema data indexes) {:type ::datalog-relation}))
 
 (defn add-relation
   "Adds a relation to the database"
@@ -103,7 +100,6 @@
       (reduce (fn [db key] (add-index db name key))
               db1
               indexes))))
-    
 
 (defmacro make-database
   "Makes a database, like this
@@ -123,7 +119,7 @@
                        `(add-relation ~cur ~(first body) ~(fnext body))
                      (= cmd 'index)
                        `(add-index ~cur ~(first body) ~(fnext body))
-                     :otherwise (throwf "%s not recognized" new))))]
+                       :otherwise (throw (Exception. (str new "not recognized"))))))]
     (reduce wrapper `empty-database commands)))
 
 (defn get-relation
@@ -136,9 +132,7 @@
   [db rel-name rel]
   (assoc db rel-name rel))
 
-
 ;;; DML
-
 
 (defn database-counts
   "Returns a map with the count of elements in each relation."
@@ -282,6 +276,3 @@
   "Merges databases together in parallel"
   [dbs]
   (preduce merge-relations dbs))
-
-
-;; End of file

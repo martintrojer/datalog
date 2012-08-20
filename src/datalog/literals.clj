@@ -14,9 +14,9 @@
 ;;  Created 25 Feburary 2009
 
 
-(ns clojure.contrib.datalog.literals
-  (:use clojure.contrib.datalog.util)
-  (:use clojure.contrib.datalog.database)
+(ns datalog.literals
+  (:use datalog.util)
+  (:use datalog.database)
   (:use [clojure.set :only (intersection)])
   (:use [clojure.contrib.set :only (subset?)])
   (:use [clojure.contrib.seq-utils :only (flatten)]))

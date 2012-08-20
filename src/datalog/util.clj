@@ -13,8 +13,11 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 3 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
+
 (ns datalog.util)
 
+;; Fron clojure.contrib.seqs
 (defn separate
   "Returns a vector:
    [ (filter f s), (filter (complement f) s) ]"

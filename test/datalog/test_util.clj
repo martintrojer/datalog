@@ -13,6 +13,8 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 11 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
+
 (ns datalog.test-util
   (:use [clojure.test]
 	[datalog.util]))
