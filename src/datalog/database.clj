@@ -16,13 +16,13 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.database
-  (:use datalog.util)
+  (:use [datalog.util])
   (:use [clojure.set :only (union intersection difference)]))
 
-;; A set of key names
-;; A set of tuples
-;; A map key names to indexes (in turn a map of value to tuples)
-(defrecord Relation [schema data indexes])         
+(defrecord Relation
+    [schema                    ; A set of key names
+     data                      ; A set of tuples
+     indexes])                 ; A map key names to indexes (in turn a map of value to tuples)
 
 ;;; DDL
 

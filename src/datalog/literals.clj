@@ -13,35 +13,31 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 25 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.literals
-  (:use datalog.util)
-  (:use datalog.database)
-  (:use [clojure.set :only (intersection)])
-  (:use [clojure.contrib.set :only (subset?)])
-  (:use [clojure.contrib.seq-utils :only (flatten)]))
+  (:use [datalog.util]
+        [datalog.database])
+  (:use [clojure.set :only (intersection subset?)]))
 
-(clojure.set.in)
+;; =============================
+;; Type Definitions
 
-
-;;; Type Definitions
-
-(defstruct atomic-literal
-  :predicate              ; The predicate name
-  :term-bindings          ; A map of column names to bindings
-  :literal-type)          ; ::literal or ::negated
+(defrecord AtomicLiteral
+    [predicate            ; The predicate name
+     term-bindings        ; A map of column names to bindings
+     literal-type])       ; ::literal or ::negated
 
 (derive ::negated ::literal)
 
-(defstruct conditional-literal
-  :fun                    ; The fun to call
-  :symbol                 ; The fun symbol (for display)
-  :terms                  ; The formal arguments
-  :literal-type)          ; ::conditional
+(defrecord ConditionalLiteral
+    [fun                  ; The fun to call
+     symbol               ; The fun symbol (for display)
+     terms                ; The formal arguments
+     literal-type])       ; ::conditional
 
-
-;;; Basics
-
+;; =============================
+;; Basics
 
 (defmulti literal-predicate
   "Return the predicate/relation this conditional operates over"
@@ -121,8 +117,8 @@
   [l]
   (= (:literal-type l) ::literal))
 
-
-;;; Building Literals
+;; =============================
+;; Building Literals
 
 (def negation-symbol 'not!)
 (def conditional-symbol 'if)
@@ -139,7 +135,7 @@
   (let [p (first f)
         ts (map #(if (is-var? %) `(quote ~%) %) (next f))
         b (if (seq ts) (apply assoc {} ts) nil)]
-    `(struct atomic-literal ~p ~b ~type)))
+    `(->AtomicLiteral ~p ~b ~type)))
 
 (defmethod build-literal :default
   [f]
@@ -154,14 +150,14 @@
   (let [symbol (fnext f)
         terms (nnext f)
         fun `(fn [binds#] (apply ~symbol binds#))]
-    `(struct conditional-literal
+    `(->ConditionalLiteral
              ~fun
              '~symbol
              '~terms
              ::conditional)))
 
-
-;;; Display
+;; =============================
+;; Display
 
 (defmulti display-literal
   "Converts a struct representing a literal to a normal list"
@@ -183,8 +179,8 @@
   [l]
   (list* conditional-symbol (:symbol l) (:terms l)))
 
-
-;;; Sip computation
+;; =============================
+;; Sip computation
 
 (defmulti get-vs-from-cs
   "From a set of columns, return the vars"
@@ -199,7 +195,6 @@
 (defmethod get-vs-from-cs ::conditional
   [l bound]
   nil)
-
 
 (defmulti get-cs-from-vs
   "From a set of vars, get the columns"
@@ -217,7 +212,6 @@
   [l bound]
   nil)
 
-
 (defmulti get-self-bound-cs
   "Get the columns that are bound withing the literal."
   :literal-type)
@@ -233,7 +227,6 @@
 (defmethod get-self-bound-cs ::conditional
   [l]
   nil)
-
 
 (defmulti literal-appropriate?
   "When passed a set of bound vars, determines if this literal can be
@@ -252,7 +245,6 @@
   [bound l]
   (subset? (literal-vars l) bound))
 
-
 (defmulti adorned-literal
   "When passed a set of bound columns, returns the adorned literal"
   (fn [l b] (:literal-type l)))
@@ -269,7 +261,6 @@
   [l bound]
   l)
 
-
 (defn get-adorned-bindings
   "Get the bindings from this adorned literal."
   [pred]
@@ -282,8 +273,8 @@
     (:pred pred)
     pred))
 
-
-;;; Magic Stuff
+;; =============================
+;; Magic Stuff
 
 (defn magic-literal
   "Create a magic version of this adorned predicate."
@@ -310,8 +301,8 @@
   (let [ntbs (map-values (fn [_] (gensym '?_gen_)) (:term-bindings s))]
     (assoc s :term-bindings ntbs)))
 
-
-;;; Semi-naive support
+;; =============================
+;; Semi-naive support
 
 (defn negated-literal
   "Given a literal l, return a negated version"
@@ -326,8 +317,8 @@
         pred (if (map? pred*) pred* {:pred pred*})]
     (assoc l :predicate (assoc pred :delta true))))
 
-        
-;;; Database operations
+;; =============================        
+;; Database operations
 
 (defn- build-partial-tuple
   [lit binds]
@@ -351,7 +342,6 @@
                  binds))]
     (reduce step {} (:term-bindings lit))))
   
-
 (defn- join-literal*
   [db lit bs fun]
   (let [each (fn [binds]
@@ -411,6 +401,3 @@
                         tuple (reduce step {} (:term-bindings lit))]
                     (add-tuple rel tuple)))]
        (replace-relation db rel-name (reduce step rel bs)))))
-
-
-;; End of file

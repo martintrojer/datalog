@@ -16,8 +16,8 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.test-database
-  (:use [clojure.test]
-	[datalog.database]))
+  (:use [datalog.database])
+  (:use [clojure.test]))
 
 (def test-db
      (make-database

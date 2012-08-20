@@ -16,8 +16,8 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.test-util
-  (:use [clojure.test]
-	[datalog.util]))
+  (:use [datalog.util])
+  (:use [clojure.test]))
 
 (deftest test-is-var?
   (is (is-var? '?x))

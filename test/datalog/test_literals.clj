@@ -13,12 +13,12 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 25 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
-(ns clojure.contrib.datalog.tests.test-literals
-  (:use clojure.test)
-  (:use clojure.contrib.datalog.literals
-        clojure.contrib.datalog.database))
-
+(ns datalog.test-literals
+  (:use [datalog.literals]
+        [datalog.database])
+  (:use [clojure.test]))
 
 (def pl (eval (build-literal '(:fred :x ?x :y ?y :z 3))))
 (def nl (eval (build-literal '(not! :fred :x ?x :y ?y :z 3))))
@@ -117,17 +117,9 @@
 
 (deftest test-magic-literal
   (is (= (magic-literal pl)
-         {:predicate {:pred :fred :magic true}, :term-bindings {}, :literal-type :clojure.contrib.datalog.literals/literal}))
+         (->AtomicLiteral {:pred :fred :magic true} {} :datalog.literals/literal)))
   (is (= (magic-literal (adorned-literal pl #{:x}))
-         {:predicate {:pred :fred :magic true :bound #{:x}},
-          :term-bindings {:x '?x},
-          :literal-type :clojure.contrib.datalog.literals/literal})))
-
-(comment
-  (use 'clojure.contrib.stacktrace) (e)
-  (use :reload 'clojure.contrib.datalog.literals)
-)
-
+         (->AtomicLiteral {:pred :fred :magic true :bound #{:x}} {:x '?x} :datalog.literals/literal))))
 
 (def db1 (make-database
            (relation :fred [:x :y])
@@ -177,11 +169,3 @@
             #{{:x 1, :y 3}}
             }
            }))))
-
-
-
-(comment
-  (run-tests)
-)
-
-;; End of file
