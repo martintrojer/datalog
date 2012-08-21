@@ -151,10 +151,10 @@
         terms (nnext f)
         fun `(fn [binds#] (apply ~symbol binds#))]
     `(->ConditionalLiteral
-             ~fun
-             '~symbol
-             '~terms
-             ::conditional)))
+      ~fun
+      '~symbol
+      '~terms
+      ::conditional)))
 
 ;; =============================
 ;; Display
@@ -292,7 +292,7 @@
   (let [pred (literal-predicate lit)]
     (when (map? pred)
       (:magic pred))))
-      
+
 (defn build-seed-bindings
   "Given a seed literal, already adorned and in magic form, convert
    its bound constants to new variables."
@@ -341,7 +341,7 @@
                  (assoc binds val (tuple key))
                  binds))]
     (reduce step {} (:term-bindings lit))))
-  
+
 (defn- join-literal*
   [db lit bs fun]
   (let [each (fn [binds]
@@ -381,7 +381,7 @@
                    binds
                    nil)))]
     (remove nil? (map each bs))))
-                 
+
 (defn project-literal
   "Project a stream of bindings onto a literal/relation. Returns a new
    db."

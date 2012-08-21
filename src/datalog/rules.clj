@@ -16,10 +16,10 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.rules
-  (use [datalog.util]
-       [datalog.literals]
-       [datalog.database])
-  (use [clojure.set :only (union intersection difference subset?)]))
+  (:use [datalog.util]
+        [datalog.literals]
+        [datalog.database])
+  (:use [clojure.set :only (union intersection difference subset?)]))
 
 (defrecord DatalogRule [head body])
 
@@ -69,7 +69,7 @@
     `(is-safe? (build-rule ~head [~@body]))))
 
 (defmethod print-method ::datalog-rule
-  [rule writer]
+  [rule ^java.io.Writer writer]
   (print-method (display-rule rule) writer))
 
 (defn return-rule-data
@@ -81,10 +81,10 @@
   "Define a datalog query"
   [& q]
   (let [qq (build-atom q :datalog.literals/literal)]
-  `(with-meta ~qq {:type ::datalog-query})))
+    `(with-meta ~qq {:type ::datalog-query})))
 
 (defmethod print-method ::datalog-query
-  [query writer]
+  [query ^java.io.Writer writer]
   (print-method (display-query query) writer))
 
 ;; =============================
@@ -124,16 +124,16 @@
    printing."
   [rs]
   (with-meta rs {:type ::datalog-rules-set}))
-    
+
 (def empty-rules-set (make-rules-set #{}))
 
 (defn rules-set
   "Given a collection of rules return a rules set"
   [& rules]
   (reduce conj empty-rules-set rules))
-  
+
 (defmethod print-method ::datalog-rules-set
-  [rules writer]
+  [rules ^java.io.Writer writer]
   (binding [*out* writer]
     (do
       (print "(rules-set")

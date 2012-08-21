@@ -13,19 +13,19 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 28 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
-(ns clojure.contrib.datalog.softstrat
-  (:use clojure.contrib.datalog.util
-        clojure.contrib.datalog.database
-        clojure.contrib.datalog.literals
-        clojure.contrib.datalog.rules
-        clojure.contrib.datalog.magic)
+(ns datalog.softstrat
+  (:use [datalog.util]
+        [datalog.database]
+        [datalog.literals]
+        [datalog.rules]
+        [datalog.magic])
   (:use [clojure.set :only (union intersection difference)])
-  (:use [clojure.contrib.seq-utils :only (indexed)])
-  (:require [clojure.contrib.graph :as graph]))
+  (:require [datalog.graph :as graph]))
 
-
-;;; Dependency graph
+;; =============================
+;; Dependency graph
 
 (defn- build-rules-graph
   "Given a rules-set (rs), build a graph where each predicate symbol in rs,
@@ -48,7 +48,7 @@
                                    (map :body rules))]
                  (assoc nbs pred preds)))
         neighbors (reduce step {} preds)]
-    (struct graph/directed-graph preds neighbors)))
+    (graph/->DirectedGraph preds neighbors)))
 
 (defn- build-def
   "Given a rules-set, build its def function"
@@ -61,8 +61,8 @@
     (fn [pred]
       (apply union (map set (map pred-map (graph/get-neighbors graph pred)))))))
 
-
-;;; Soft Stratificattion REQ Graph                 
+;; =============================
+;; Soft Stratificattion REQ Graph                 
 
 (defn- req
   "Returns a rules-set that is a superset of req(lit) for the lit at
@@ -83,7 +83,8 @@
                  (union nrs (req rs soft-def rule idx))
                  nrs))]
     (intersection mrs
-                  (reduce step empty-rules-set (-> rule :body indexed)))))
+                  (reduce step empty-rules-set
+                          (->> rule :body (map-indexed vector))))))
 
 (defn- soft-strat-graph
   "The dependency graph for soft stratification."
@@ -92,7 +93,7 @@
         step (fn [nbrs rule]
                (assoc nbrs rule (rule-dep rs mrs soft-def rule)))
         nbrs (reduce step {} mrs)]
-    (struct graph/directed-graph mrs nbrs)))
+    (graph/->DirectedGraph mrs nbrs)))
 
 (defn- build-soft-strat
   "Given a rules-set (unadorned) and an adorned query, return the soft
@@ -105,26 +106,24 @@
         gr (soft-strat-graph ars mrs)]
     (map make-rules-set (graph/dependency-list gr))))
         
+;; =============================
+;; Work plan
 
-;;; Work plan
-
-(defstruct soft-strat-work-plan
-  :query
-  :stratification)
+(defrecord SoftStratWorkPlan [query stratification])
 
 (defn build-soft-strat-work-plan
   "Return a work plan for the given rules-set and query"
   [rs q]
   (let [aq (adorn-query q)]
-    (struct soft-strat-work-plan aq (build-soft-strat rs aq))))
+    (->SoftStratWorkPlan aq (build-soft-strat rs aq))))
 
 (defn get-all-relations
   "Return a set of all relation names defined in this workplan"
   [ws]
   (apply union (map all-predicates (:stratification ws))))
 
-
-;;; Evaluate
+;; =============================
+;; Evaluate
 
 (defn- weak-consq-operator
   [db strat]
@@ -155,7 +154,3 @@
            new-db (graph/fixed-point seeded-db fun nil equal)
            pt (build-partial-tuple query bindings)]
        (select new-db (literal-predicate query) pt))))
-
-
-
-;; End of file

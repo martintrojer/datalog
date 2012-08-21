@@ -17,7 +17,7 @@
 
 (ns datalog.util)
 
-;; Fron clojure.contrib.seqs
+;; From clojure.contrib.seqs
 (defn separate
   "Returns a vector:
    [ (filter f s), (filter (complement f) s) ]"
@@ -82,7 +82,7 @@
 
 ;;; Debuging and Tracing
 
-(def *trace-datalog* nil)
+(def ^:dynamic *trace-datalog* nil)
 
 (defmacro trace-datalog
   "If *test-datalog* is set to true, run the enclosed commands"

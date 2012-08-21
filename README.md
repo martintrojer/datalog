@@ -10,6 +10,8 @@ Used as a play pen for disk based (non in-memory) database queries.
 
 lein test
 
+see src/datalog/examples.clj
+
 ## License
 
 Copyright © 2012 Martin Trojer

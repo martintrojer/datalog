@@ -122,17 +122,17 @@
          (->AtomicLiteral {:pred :fred :magic true :bound #{:x}} {:x '?x} :datalog.literals/literal))))
 
 (def db1 (make-database
-           (relation :fred [:x :y])
-           (index :fred :x)
-           (relation :sally [:x])))
+          (relation :fred [:x :y])
+          (index :fred :x)
+          (relation :sally [:x])))
 
 (def db2 (add-tuples db1
-             [:fred :x 1 :y :mary]
-             [:fred :x 1 :y :becky]
-             [:fred :x 3 :y :sally]
-             [:fred :x 4 :y :joe]
-             [:sally :x 1]
-             [:sally :x 2]))
+                     [:fred :x 1 :y :mary]
+                     [:fred :x 1 :y :becky]
+                     [:fred :x 3 :y :sally]
+                     [:fred :x 4 :y :joe]
+                     [:sally :x 1]
+                     [:sally :x 2]))
 
 (def lit1 (eval (build-literal '(:fred :x ?x :y ?y))))
 (def lit2 (eval (build-literal '(not! :fred :x ?x))))
@@ -146,7 +146,7 @@
          [{'?x 2}]))
   (is (= (join-literal db2 lit3 [{'?x 1 '?y 2} {'?x 3 '?y 1}])
          [{'?x 3 '?y 1}])))
-         
+
 (deftest test-project-literal
   (is (= ((project-literal db2 lit4 [{'?x 1 '?y 3}{'?x 4 '?y 2}]) {:pred :joan :bound #{:x}})
          (datalog-relation

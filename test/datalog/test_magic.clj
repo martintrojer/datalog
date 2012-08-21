@@ -13,18 +13,18 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 18 Feburary 2009
 
-(ns clojure.contrib.datalog.tests.test-magic
-  (:use clojure.test)
-  (:use clojure.contrib.datalog.magic
-        clojure.contrib.datalog.rules))
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
-
+(ns datalog.test-magic
+  (:use [datalog.magic]
+        [datalog.rules])
+  (:use clojure.test))
 
 (def rs (rules-set
-             (<- (:p :x ?x :y ?y) (:e :x ?x :y ?y))
-             (<- (:p :x ?x :y ?y) (:e :x ?x :y ?z) (:p :x ?z :y ?y))
-             (<- (:e :x ?x :y ?y) (:b :x ?x :y ?y))
-             (<- (:e :x ?y :y ?y) (:c :x ?x :y ?y))))
+         (<- (:p :x ?x :y ?y) (:e :x ?x :y ?y))
+         (<- (:p :x ?x :y ?y) (:e :x ?x :y ?z) (:p :x ?z :y ?y))
+         (<- (:e :x ?x :y ?y) (:b :x ?x :y ?y))
+         (<- (:e :x ?y :y ?y) (:c :x ?x :y ?y))))
 
 (def q (adorn-query (?- :p :x 1 :y ?y)))
 
@@ -35,7 +35,7 @@
          (rules-set
           (<- ({:pred :p :bound #{:x}} :y ?y :x ?x) ({:pred :e :bound #{:x}} :y ?y :x ?x))
           (<- ({:pred :p :bound #{:x}} :y ?y :x ?x) ({:pred :e :bound #{:x}} :y ?z :x ?x)
-                                                    ({:pred :p :bound #{:x}} :y ?y :x ?z))
+              ({:pred :p :bound #{:x}} :y ?y :x ?z))
           (<- ({:pred :e :bound #{:x}} :y ?y :x ?y) (:c :y ?y :x ?x))
           (<- ({:pred :e :bound #{:x}} :y ?y :x ?x) (:b :y ?y :x ?x))))))
 
@@ -50,23 +50,13 @@
           (<- ({:pred :e :bound #{:x}} :y ?y :x ?x) ({:pred :e :magic true :bound #{:x}} :x ?x) (:b :y ?y :x ?x))
 
           (<- ({:pred :p :magic true :bound #{:x}} :x ?z) ({:pred :p :magic true :bound #{:x}} :x ?x)
-                                                          ({:pred :e :bound #{:x}} :y ?z :x ?x))
+              ({:pred :e :bound #{:x}} :y ?z :x ?x))
 
           (<- ({:pred :p :bound #{:x}} :y ?y :x ?x) ({:pred :p :magic true :bound #{:x}} :x ?x)
-                                                    ({:pred :e :bound #{:x}} :y ?z :x ?x)
-                                                    ({:pred :p :bound #{:x}} :y ?y :x ?z))
+              ({:pred :e :bound #{:x}} :y ?z :x ?x)
+              ({:pred :p :bound #{:x}} :y ?y :x ?z))
 
           (<- ({:pred :e :magic true :bound #{:x}} :x ?x) ({:pred :p :magic true :bound #{:x}} :x ?x))
 
           (<- ({:pred :p :bound #{:x}} :y ?y :x ?x) ({:pred :p :magic true :bound #{:x}} :x ?x)
-                                                    ({:pred :e :bound #{:x}} :y ?y :x ?x))))))
-
-
-
-
-(comment
-  (run-tests)
-)
-
-;; End of file
-
+              ({:pred :e :bound #{:x}} :y ?y :x ?x))))))

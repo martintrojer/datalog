@@ -13,15 +13,16 @@
 ;;  straszheimjeffrey (gmail)
 ;;  Created 18 Feburary 2009
 
+;; Converted to Clojure1.4 by Martin Trojer 2012.
 
-(ns clojure.contrib.datalog.magic
-  (:use clojure.contrib.datalog.util
-        clojure.contrib.datalog.literals
-        clojure.contrib.datalog.rules)
+(ns datalog.magic
+  (:use [datalog.util]
+        [datalog.literals]
+        [datalog.rules])
   (:use [clojure.set :only (union intersection difference)]))
 
-
-;;; Adornment
+;; =============================
+;; Adornment
 
 (defn adorn-query
   "Adorn a query"
@@ -37,28 +38,29 @@
     (loop [nrs empty-rules-set ; The rules set being built
            needed #{(literal-predicate q)}]
       (if (empty? needed)
-          nrs
-          (let [pred (first needed)
-                remaining (disj needed pred)
-                base-pred (get-base-predicate pred)
-                bindings (get-adorned-bindings pred)
-                new-rules (p-map base-pred)
-                new-adorned-rules (map (partial compute-sip bindings i-preds)
-                                       new-rules)
-                new-nrs (reduce conj nrs new-adorned-rules)
-                current-preds (all-predicates new-nrs)
-                not-needed? (fn [pred]
-                              (or (current-preds pred)
-                                  (-> pred get-base-predicate i-preds not)))
-                add-pred (fn [np pred]
-                           (if (not-needed? pred) np (conj np pred)))
-                add-preds (fn [np rule]
-                            (reduce add-pred np (map literal-predicate (:body rule))))
-                new-needed (reduce add-preds remaining new-adorned-rules)]
-            (recur new-nrs new-needed))))))
+        nrs
+        (let [pred (first needed)
+              remaining (disj needed pred)
+              base-pred (get-base-predicate pred)
+              bindings (get-adorned-bindings pred)
+              new-rules (p-map base-pred)
+              new-adorned-rules (map (partial compute-sip bindings i-preds)
+                                     new-rules)
+              new-nrs (reduce conj nrs new-adorned-rules)
+              current-preds (all-predicates new-nrs)
+              not-needed? (fn [pred]
+                            (or (current-preds pred)
+                                (-> pred get-base-predicate i-preds not)))
+              add-pred (fn [np pred]
+                         (if (not-needed? pred) np (conj np pred)))
+              add-preds (fn [np rule]
+                          (reduce add-pred np (map literal-predicate (:body rule))))
+              new-needed (reduce add-preds remaining new-adorned-rules)]
+          (recur new-nrs new-needed))))))
 
 
-;;; Magic !
+;; =============================
+;; Magic !
 
 (defn seed-relation
   "Given a magic form of a query, give back the literal form of its seed
@@ -94,7 +96,7 @@
         columns (-> seed :term-bindings keys)
         new-term-bindings (-> q :term-bindings (select-keys columns))]
     (assoc seed :term-bindings new-term-bindings)))
-    
+
 (defn magic-transform
   "Return a magic transformation of an adorned rules-set (rs).  The
    (i-preds) are the predicates of the intension database.  These
@@ -121,8 +123,4 @@
                                [rs (conj bd l)]))
                       [nrs _] (reduce step [rs []] body)]
                   (conj nrs answer-rule)))]
-     (reduce xr empty-rules-set rs))))
-             
-         
-
-;; End of file
+       (reduce xr empty-rules-set rs))))
