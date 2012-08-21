@@ -6,11 +6,13 @@ As in running nicely on 1.4, and following "modern" conventions.
 
 Used as a play pen for disk based (non in-memory) database queries.
 
+Check out [wiki] (https://github.com/martintrojer/datalog/wiki) for more info
+
 ## Usage
 
-* add [datalog "0.1.0"] to :dependencies in your project.clj
+* add `[datalog "0.1.1"]` to `:dependencies` in your project.clj
 
-* see src/datalog/examples.clj
+* [example.clj] (https://github.com/martintrojer/datalog/blob/master/src/datalog/example.clj)
 
 * lein test
 
