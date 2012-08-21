@@ -8,9 +8,11 @@ Used as a play pen for disk based (non in-memory) database queries.
 
 ## Usage
 
-lein test
+* add [datalog "0.1.0"] to :dependencies in your project.clj
 
-see src/datalog/examples.clj
+* see src/datalog/examples.clj
+
+* lein test
 
 ## License
 

@@ -1,4 +1,4 @@
-(defproject datalog "0.1.0"
+(defproject datalog "0.2.0-SNAPSHOT"
   :description "contrib.datalog brought back to life"
   :url "https://guthub.com/martintrojer/datalog"
   :license {:name "Eclipse Public License"
