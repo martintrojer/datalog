@@ -21,10 +21,9 @@
 (ns ^{:author "Jeffrey Straszheim",
       :doc "A Clojure implementation of Datalog"} 
   datalog.datalog
-  (:use [datalog.rules]
-        [datalog.softstrat]
-        [datalog.database])
-  (:use [clojure.set :only (intersection)]))
+  (:require
+   [clojure.set :as set]
+   [datalog.softstrat :as softstrat]))
 
 (defrecord WorkPlan
   [work-plan        ; The underlying structure
@@ -35,7 +34,7 @@
 (defn- validate-work-plan
   "Ensure any top level semantics are not violated"
   [work-plan database]
-  (let [common-relations (-> work-plan :rules (intersection (-> database keys set)))]
+  (let [common-relations (-> work-plan :rules (set/intersection (-> database keys set)))]
     (when (-> common-relations
               empty?
               not)
@@ -45,11 +44,11 @@
   "Given a list of rules and a query, build a work plan that can be
    used to execute the query."
   [rules query]
-  (->WorkPlan (build-soft-strat-work-plan rules query) rules query ::soft-stratified))
+  (->WorkPlan (softstrat/build-soft-strat-work-plan rules query) rules query ::soft-stratified))
 
 (defn run-work-plan
   "Given a work plan, a database, and some query bindings, run the
    work plan and return the results."
   [work-plan database query-bindings]
   (validate-work-plan work-plan database)
-  (evaluate-soft-work-set (:work-plan work-plan) database query-bindings))
+  (softstrat/evaluate-soft-work-set (:work-plan work-plan) database query-bindings))
