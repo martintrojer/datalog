@@ -16,8 +16,9 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.database
-  (:use [datalog.util])
-  (:use [clojure.set :only (union intersection difference)]))
+  (:require
+   [clojure.set :as set]
+   [datalog.util :as util]))
 
 (defrecord Relation
     [schema                    ; A set of key names
@@ -137,7 +138,7 @@
 (defn database-counts
   "Returns a map with the count of elements in each relation."
   [db]
-  (map-values #(-> % :data count) db))
+  (util/map-values #(-> % :data count) db))
 
 (defn- modify-indexes
   "Perform f on the indexed tuple-set.  f should take a set and tuple,
@@ -231,8 +232,8 @@
         idxs (find-indexes (:indexes rel) pt)
         space (if (empty? idxs)
                 (:data rel) ; table scan :(
-                (reduce intersection idxs))]
-    (trace-datalog (when (empty? idxs)
+                (reduce set/intersection idxs))]
+    (util/trace-datalog (when (empty? idxs)
                      (println (format "Table scan of %s: %s rows!!!!!"
                                       rn
                                       (count space)))))
@@ -255,7 +256,7 @@
 
 (defn merge-indexes
   [idx1 idx2]
-  (merge-with (fn [h1 h2] (merge-with union h1 h2)) idx1 idx2))
+  (merge-with (fn [h1 h2] (merge-with set/union h1 h2)) idx1 idx2))
 
 (defn merge-relations
   "Merges two relations"
@@ -263,7 +264,7 @@
   (assert (= (:schema r1) (:schema r2)))
   (let [merged-indexes (merge-indexes (:indexes r1)
                                       (:indexes r2))
-        merged-data (union (:data r1)
+        merged-data (set/union (:data r1)
                            (:data r2))]
     (assoc r1 :data merged-data :indexes merged-indexes)))
 
@@ -275,4 +276,4 @@
 (defn database-merge-parallel
   "Merges databases together in parallel"
   [dbs]
-  (preduce merge-relations dbs))
+  (util/preduce merge-relations dbs))
