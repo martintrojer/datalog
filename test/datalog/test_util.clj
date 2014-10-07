@@ -16,6 +16,7 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.test-util
+  (:refer-clojure :exclude [reduced])
   (:use [datalog.util])
   (:use [clojure.test]))
 
