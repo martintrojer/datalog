@@ -29,15 +29,15 @@
 
 (defmethod print-method ::datalog-database
   [db ^java.io.Writer writer]
-   (binding [*out* writer]
-     (do
-       (println "(datalog-database")
-       (println "{")
-       (doseq [key (keys db)]
-         (println)
-         (println key)
-         (print-method (db key) writer))
-       (println "})"))))
+  (binding [*out* writer]
+    (do
+      (println "(datalog-database")
+      (println "{")
+      (doseq [key (keys db)]
+        (println)
+        (println key)
+        (print-method (db key) writer))
+      (println "})"))))
 
 (defn datalog-database
   [rels]
@@ -104,12 +104,12 @@
 
 (defmacro make-database
   "Makes a database, like this
-   (make-database
-     (relation :fred [:mary :sue])
-     (index :fred :mary)
-     (relation :sally [:jen :becky])
-     (index :sally :jen)
-     (index :sally :becky))"
+  (make-database
+  (relation :fred [:mary :sue])
+  (index :fred :mary)
+  (relation :sally [:jen :becky])
+  (index :sally :jen)
+  (index :sally :becky))"
   [& commands]
   (let [wrapper (fn [cur new]
                   (let [cmd (first new)
@@ -142,7 +142,7 @@
 
 (defn- modify-indexes
   "Perform f on the indexed tuple-set.  f should take a set and tuple,
-   and return the new set."
+  and return the new set."
   [idxs tuple f]
   (into {} (for [ik (keys idxs)]
              (let [im (idxs ik)
@@ -166,10 +166,10 @@
 (defn add-tuple
   "Two forms:
 
-   [db relation-name tuple] adds tuple to the named relation.  Returns
-   the new database.
+  [db relation-name tuple] adds tuple to the named relation.  Returns
+  the new database.
 
-   [rel tuple] adds to the relation object.  Returns the new relation."
+  [rel tuple] adds to the relation object.  Returns the new relation."
   ([db rel-name tuple]
      (assert (= (-> tuple keys set) (-> rel-name db :schema)))
      (assoc db rel-name (add-tuple (db rel-name) tuple)))
@@ -184,11 +184,11 @@
 (defn remove-tuple
   "Two forms:
 
-   [db relation-name tuple] removes the tuple from the named relation,
-   returns a new database.
+  [db relation-name tuple] removes the tuple from the named relation,
+  returns a new database.
 
-   [rel tuple] removes the tuple from the relation.  Returns the new
-   relation."
+  [rel tuple] removes the tuple from the relation.  Returns the new
+  relation."
   ([db rel-name tuple] (assoc db rel-name (remove-tuple (db rel-name) tuple)))
   ([rel tuple]
      (let [data (:data rel)
@@ -200,9 +200,9 @@
 
 (defn add-tuples
   "Adds a collection of tuples to the db, as
-   (add-tuples db
-      [:rel-name :key-1 1 :key-2 2]
-      [:rel-name :key-1 2 :key-2 3])"
+  (add-tuples db
+  [:rel-name :key-1 1 :key-2 2]
+  [:rel-name :key-1 2 :key-2 3])"
   [db & tupls]
   (reduce #(add-tuple %1 (first %2) (apply hash-map (next %2))) db tupls))
 
@@ -226,7 +226,7 @@
 
 (defn- scan-space
   "Computes a stream of tuples from relation rn matching partial tuple (pt)
-   and applies fun to each"
+  and applies fun to each"
   [fun db rn pt]
   (let [rel (db rn)
         idxs (find-indexes (:indexes rel) pt)
@@ -234,9 +234,9 @@
                 (:data rel) ; table scan :(
                 (reduce set/intersection idxs))]
     (util/trace-datalog (when (empty? idxs)
-                     (println (format "Table scan of %s: %s rows!!!!!"
-                                      rn
-                                      (count space)))))
+                          (println (format "Table scan of %s: %s rows!!!!!"
+                                           rn
+                                           (count space)))))
     (fun #(match? % pt) space)))
 
 (defn select
@@ -265,7 +265,7 @@
   (let [merged-indexes (merge-indexes (:indexes r1)
                                       (:indexes r2))
         merged-data (set/union (:data r1)
-                           (:data r2))]
+                               (:data r2))]
     (assoc r1 :data merged-data :indexes merged-indexes)))
 
 (defn database-merge
