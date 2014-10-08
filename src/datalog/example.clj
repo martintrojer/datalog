@@ -16,10 +16,11 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.example
-  (:use [datalog.datalog :only (build-work-plan run-work-plan)]
-        [datalog.rules :only (<- ?- rules-set)]
-        [datalog.database :only (make-database add-tuples)]
-        [datalog.util :only (*trace-datalog*)]))
+  (:require
+   [datalog.datalog :refer (build-work-plan run-work-plan)]
+   [datalog.rules :refer (<- ?- rules-set)]
+   [datalog.database :refer (make-database add-tuples)]
+   [datalog.util :refer (*trace-datalog*)]))
 
 (def db-base
   (make-database
@@ -77,22 +78,35 @@
 
 (def rules
   (rules-set
-   (<- (:works-for :employee ?x :boss ?y) (:boss :employee-id ?e-id :boss-id ?b-id)
+   (<- (:works-for :employee ?x :boss ?y)
+       (:boss :employee-id ?e-id :boss-id ?b-id)
        (:employee :id ?e-id :name ?x)
        (:employee :id ?b-id :name ?y))
-   (<- (:works-for :employee ?x :boss ?y) (:works-for :employee ?x :boss ?z)
+
+   (<- (:works-for :employee ?x :boss ?y)
+       (:works-for :employee ?x :boss ?z)
        (:works-for :employee ?z :boss ?y))
-   (<- (:employee-job* :employee ?x :job ?y) (:employee :name ?x :position ?pos)
+
+   (<- (:employee-job* :employee ?x :job ?y)
+       (:employee :name ?x :position ?pos)
        (:can-do-job :position ?pos :job ?y))
-   (<- (:employee-job* :employee ?x :job ?y) (:job-replacement :job ?y :can-be-done-by ?z)
+
+   (<- (:employee-job* :employee ?x :job ?y)
+       (:job-replacement :job ?y :can-be-done-by ?z)
        (:employee-job* :employee ?x  :job ?z))
-   (<- (:employee-job* :employee ?x :job ?y) (:can-do-job :job ?y)
+
+   (<- (:employee-job* :employee ?x :job ?y)
+       (:can-do-job :job ?y)
        (:employee :name ?x :position ?z)
        (if = ?z :boss))
-   (<- (:employee-job :employee ?x :job ?y) (:employee-job* :employee ?x :job ?y)
+
+   (<- (:employee-job :employee ?x :job ?y)
+       (:employee-job* :employee ?x :job ?y)
        (:employee :id ?id :name ?x)
        (not! :job-exceptions :id ?id :job ?y))
-   (<- (:bj :name ?x :boss ?y) (:works-for :employee ?x :boss ?y)
+
+   (<- (:bj :name ?x :boss ?y)
+       (:works-for :employee ?x :boss ?y)
        (not! :employee-job :employee ?y :job :pc-support))))
 
 (def wp-1 (build-work-plan rules (?- :works-for :employee '??name :boss ?x)))

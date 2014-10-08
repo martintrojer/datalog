@@ -16,30 +16,31 @@
 ;; Converted to Clojure1.4 by Martin Trojer 2012.
 
 (ns datalog.softstrat
-  (:use [datalog.util]
-        [datalog.database]
-        [datalog.literals]
-        [datalog.rules]
-        [datalog.magic])
-  (:use [clojure.set :only (union intersection difference)])
-  (:require [datalog.graph :as graph]))
+  (:require
+   [clojure.set :as set]
+   [datalog.database :as database]
+   [datalog.graph :as graph]
+   [datalog.literals :as literals]
+   [datalog.magic :as magic]
+   [datalog.rules :as rules]
+   [datalog.util :as util]))
 
 ;; =============================
 ;; Dependency graph
 
 (defn- build-rules-graph
   "Given a rules-set (rs), build a graph where each predicate symbol in rs,
-   there is a node n, and for each rule (<- h b-1 b-2 ...), there are edges
-   from the (literal-predicate h) -> (literal-predicate b-*), one for each
-   b-*."
+  there is a node n, and for each rule (<- h b-1 b-2 ...), there are edges
+  from the (literal-predicate h) -> (literal-predicate b-*), one for each
+  b-*."
   [rs]
-  (let [preds (all-predicates rs)
-        pred-map (predicate-map rs)
+  (let [preds (rules/all-predicates rs)
+        pred-map (rules/predicate-map rs)
         step (fn [nbs pred]
                (let [rules (pred-map pred)
                      preds (reduce (fn [pds lits]
                                      (reduce (fn [pds lit]
-                                               (if-let [pred (literal-predicate lit)]
+                                               (if-let [pred (literals/literal-predicate lit)]
                                                  (conj pds pred)
                                                  pds))
                                              pds
@@ -53,13 +54,13 @@
 (defn- build-def
   "Given a rules-set, build its def function"
   [rs]
-  (let [pred-map (predicate-map rs)
+  (let [pred-map (rules/predicate-map rs)
         graph (-> rs
                   build-rules-graph
                   graph/transitive-closure
                   graph/add-loops)]
     (fn [pred]
-      (apply union (map set (map pred-map (graph/get-neighbors graph pred)))))))
+      (apply set/union (map set (map pred-map (graph/get-neighbors graph pred)))))))
 
 ;; =============================
 ;; Soft Stratificattion REQ Graph                 
@@ -72,18 +73,18 @@
         body (:body rule)
         lit (nth body lit-index)
         pre (subvec (vec body) 0 lit-index)]
-    (conj (-> lit literal-predicate soft-def (magic-transform (all-predicates rs)))
-          (build-rule (magic-literal lit) pre))))
+    (conj (-> lit literals/literal-predicate soft-def (magic/magic-transform (rules/all-predicates rs)))
+          (rules/build-rule (literals/magic-literal lit) pre))))
 
 (defn- rule-dep
   "Given a rule, return the set of rules it depends on."
   [rs mrs soft-def rule]
   (let [step (fn [nrs [idx lit]]
-               (if (negated? lit)
-                 (union nrs (req rs soft-def rule idx))
+               (if (literals/negated? lit)
+                 (set/union nrs (req rs soft-def rule idx))
                  nrs))]
-    (intersection mrs
-                  (reduce step empty-rules-set
+    (set/intersection mrs
+                  (reduce step rules/empty-rules-set
                           (->> rule :body (map-indexed vector))))))
 
 (defn- soft-strat-graph
@@ -97,15 +98,15 @@
 
 (defn- build-soft-strat
   "Given a rules-set (unadorned) and an adorned query, return the soft
-   stratified list.  The rules will be magic transformed, and the
-   magic seed will be appended."
+  stratified list.  The rules will be magic transformed, and the
+  magic seed will be appended."
   [rs q]
-  (let [ars (adorn-rules-set rs q)
-        mrs (conj (magic-transform ars)
-                  (seed-rule q))
+  (let [ars (magic/adorn-rules-set rs q)
+        mrs (conj (magic/magic-transform ars)
+                  (magic/seed-rule q))
         gr (soft-strat-graph ars mrs)]
-    (map make-rules-set (graph/dependency-list gr))))
-        
+    (map rules/make-rules-set (graph/dependency-list gr))))
+
 ;; =============================
 ;; Work plan
 
@@ -114,28 +115,28 @@
 (defn build-soft-strat-work-plan
   "Return a work plan for the given rules-set and query"
   [rs q]
-  (let [aq (adorn-query q)]
+  (let [aq (magic/adorn-query q)]
     (->SoftStratWorkPlan aq (build-soft-strat rs aq))))
 
 (defn get-all-relations
   "Return a set of all relation names defined in this workplan"
   [ws]
-  (apply union (map all-predicates (:stratification ws))))
+  (apply set/union (map rules/all-predicates (:stratification ws))))
 
 ;; =============================
 ;; Evaluate
 
 (defn- weak-consq-operator
   [db strat]
-  (trace-datalog (println)
-                 (println)
-                 (println "=============== Begin iteration ==============="))
-  (let [counts (database-counts db)]
+  (util/trace-datalog (println)
+                      (println)
+                      (println "=============== Begin iteration ==============="))
+  (let [counts (database/database-counts db)]
     (loop [strat strat]
       (let [rs (first strat)]
         (if rs
-          (let [new-db (apply-rules-set db rs)]
-            (if (= counts (database-counts new-db))
+          (let [new-db (rules/apply-rules-set db rs)]
+            (if (= counts (database/database-counts new-db))
               (recur (next strat))
               new-db))
           db)))))
@@ -145,12 +146,12 @@
   ([ws db bindings]
      (let [query (:query ws)
            strat (:stratification ws)
-           seed (seed-predicate-for-insertion query)
-           seeded-db (project-literal db seed [bindings] is-query-var?)
+           seed (magic/seed-predicate-for-insertion query)
+           seeded-db (literals/project-literal db seed [bindings] util/is-query-var?)
            fun (fn [data]
                  (weak-consq-operator data strat))
            equal (fn [db1 db2]
-                   (= (database-counts db1) (database-counts db2)))
+                   (= (database/database-counts db1) (database/database-counts db2)))
            new-db (graph/fixed-point seeded-db fun nil equal)
-           pt (build-partial-tuple query bindings)]
-       (select new-db (literal-predicate query) pt))))
+           pt (magic/build-partial-tuple query bindings)]
+       (database/select new-db (literals/literal-predicate query) pt))))

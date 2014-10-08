@@ -20,7 +20,7 @@
     ^{:author "Jeffrey Straszheim",
       :doc "Basic graph theory algorithms"}
   datalog.graph
-  (:use [clojure.set :only (union)]))
+  (:require [clojure.set :as set]))
 
 (defrecord DirectedGraph
     [nodes       ; The nodes of the graph, a collection
@@ -143,7 +143,7 @@
            find-neighbors (fn [ns]
                             (let [nbs1 (map (partial get-neighbors g) ns)
                                   nbs2 (map set nbs1)
-                                  nbs3 (apply union nbs2)]
+                                  nbs3 (apply set/union nbs2)]
                               (set (map find-node-set nbs3))))
            nm (into {} (map (fn [ns] [ns (find-neighbors ns)]) sccs))]
        (->DirectedGraph (set sccs) nm))))
